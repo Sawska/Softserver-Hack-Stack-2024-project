@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+.course-header {
+    text-align: center;
+    background-color: #333;
+    color: white;
+    padding: 20px;
+}
+
+.course-tasks {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-checkbox {
+    margin-right: 15px;
+}
+
+.task-name {
+    font-size: 1.1em;
+    flex-grow: 1;
+}
+
+.task-status {
+    font-size: 0.9em;
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.task-status:hover {
+    text-decoration: underline;
+}

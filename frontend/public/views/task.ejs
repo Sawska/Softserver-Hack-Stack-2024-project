@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/task.css">
+    <link rel="stylesheet" href="/css/navigator.css">
+    <title><%= course.name %> - Task</title>
+</head>
+<body>
+    <ul>
+        <li class="nav-li"><a href="/main">Home</a></li>
+        <li><a>Welcome, <%= user.firstname %> <%= user.lastname %></a></li>
+        <li style="float:right">
+          <button onclick="window.location.href='/logout'">Logout</button>
+        </li>
+      </ul>    
+    <div class="course-header">
+        <h1><%= course.name %></h1>
+    </div>
+    <div class="task-container">
+        <% if (user.status === 'student') { %>
+            <div class="task-title"><%= task.title %></div>
+    
+            <div class="file-submission">
+                <label for="task-file">Submit your task (PDF or TXT only):</label>
+                <input type="file" id="task-file" name="task-file" accept=".pdf, .txt">
+            </div>
+    
+            <button 
+                class="submit-btn" 
+                data-user-id="<%= user.id %>" 
+                data-course-id="<%= course.id %>" 
+                data-task-id="<%= task.id %>">
+                Submit
+            </button>
+
+            <div class="file-view">
+                <% if (task.filePath) { %>
+                    <p>File uploaded: <a href="<%= task.filePath %>" target="_blank">View File</a></p>
+                <% } else { %>
+                    <p>No file uploaded yet.</p>
+                <% } %>
+            </div>
+    
+            <div class="grade-field">
+                Grade: <span id="grade"><%= task.grade ? task.grade : "Not Graded" %></span>
+            </div>
+    
+            <div class="plagiarism-field">
+                Plagiarism Percentage: <span id="plagiarism-percentage"><%= task.pligarism ? task.pligarism : "-" %></span>
+            </div>
+    
+            <div class="submission-date-field">
+                Date of Submission: <span id="submission-date"><%= task.date ? task.date : "-" %></span>
+            </div>
+        <% } else if (user.status === 'professor') { %>
+            <div class="search-student">
+                <label for="student-search">Search Student:</label>
+                <input type="text" id="student-search" placeholder="Enter student name or ID">
+                <button id="search-btn">Search</button>
+            </div>
+
+            <div class="file-view">
+                <% if (task.filePath) { %>
+                    <p>File uploaded: <a href="<%= task.filePath %>" target="_blank">View File</a></p>
+                <% } else { %>
+                    <p>No file uploaded yet.</p>
+                <% } %>
+            </div>
+    
+            <div class="grade-student">
+                <label for="grade-input">Assign Grade:</label>
+                <input type="text" id="grade-input" placeholder="Enter grade">
+                <button id="assign-grade-btn">Assign Grade</button>
+            </div>
+    
+            <div class="plagiarism-field">
+                AI Plagiarism Check: <span id="plagiarism-percentage"><%= task.pligarism ? task.pligarism : "-" %></span>
+            </div>
+        <% } %>
+        <a href="/courses/<%= course.name.replace(/\s+/g, '-').toLowerCase() %>" class="back-btn">Back to Course Menu</a>
+    </div>
+    
+
+    <script>
+        document.querySelector('.submit-btn').addEventListener('click', function () {
+    const userId = this.getAttribute('data-user-id');
+    const courseId = this.getAttribute('data-course-id');
+    const taskId = this.getAttribute('data-task-id');
+    
+    submitTask(userId, courseId, taskId);
+});
+
+        function submitTask(userId, courseId, taskId) {
+            const fileInput = document.getElementById('task-file');
+    
+            if (fileInput.files.length === 0) {
+                alert('Please select a file before submitting!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('userId', userId);
+            formData.append('courseId', courseId);
+            formData.append('taskId', taskId);
+
+            fetch('/submit-task', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to submit the task');
+                    }
+                })
+                .then(data => {
+                    alert('Task submitted successfully!');
+
+
+                    document.getElementById('grade').textContent = data.grade || "Not Graded";
+                    document.getElementById('plagiarism-percentage').textContent = `${data.plagiarismPercentage || 0}%`;
+                    document.getElementById('submission-date').textContent = data.submissionDate || new Date().toLocaleString();
+                    const fileView = document.querySelector('.file-view');
+                fileView.innerHTML = `<p>File uploaded: <a href="${data.filePath}" target="_blank">View File</a></p>`;
+                })
+                .catch(error => {
+                    console.error('Error submitting task:', error);
+                    alert('Error submitting task. Please try again.');
+                });
+        }
+    </script>
+</body>
+</html>

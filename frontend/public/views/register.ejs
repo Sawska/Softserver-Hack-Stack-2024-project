@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Page</title>
+    <link rel="stylesheet" href="/css/forms.css">
+</head>
+<body>
+<div class="main">
+    <h2>Registration Form</h2>
+    <div id="message"></div>
+    <form id="registerForm">
+        <label for="first">First Name:</label>
+        <input type="text" id="first" name="first" required />
+
+        <label for="last">Last Name:</label>
+        <input type="text" id="last" name="last" required />
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
+        <label for="status">Account Status:</label>
+        <select id="status" name="status" required>
+            <option value="" disabled selected>Select your status</option>
+            <option value="Professor">Professor</option>
+            <option value="Student">Student</option>
+        </select>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password"
+               pattern="^(?=.*\d)(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9])\S{8,}$" 
+               title="Password must contain at least one number, one alphabet, one symbol, and be at least 8 characters long" required />
+
+        <label for="repassword">Re-type Password:</label>
+        <input type="password" id="repassword" name="repassword" required />
+
+        <p>Already have an account? <a href="/login" class="login-link">Click here to login</a>.</p>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById("registerForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const first = document.getElementById("first").value;
+        const last = document.getElementById("last").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const repassword = document.getElementById("repassword").value;
+        const messageDiv = document.getElementById("message");
+        const status = document.getElementById("status").value;
+
+        messageDiv.innerHTML = "";
+
+        if (password !== repassword) {
+            messageDiv.innerHTML = `<div class="error">Passwords do not match.</div>`;
+            return;
+        }
+
+        if (!status) {
+        messageDiv.innerHTML = `<div class="error">Please select your account status.</div>`;
+        return;
+    }
+
+
+        try {
+            const response = await fetch("/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ first, last, email, password,status })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                messageDiv.innerHTML = `<div class="success">Registration successful! Redirecting...</div>`;
+                setTimeout(() => {
+                    window.location.href = "/login"; 
+                }, 2000);
+            } else {
+                messageDiv.innerHTML = `<div class="error">${result.message}</div>`;
+            }
+        } catch (error) {
+            messageDiv.innerHTML = `<div class="error">An error occurred: ${error.message}</div>`;
+        }
+    });
+</script>
+</body>
+</html>

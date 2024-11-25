@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/navigator.css">
+  <title>Course Navigation</title>
+</head>
+<body>
+  <ul>
+    <li class="nav-li"><a href="/main">Home</a></li>
+    <li><a>Welcome, <%= user.firstname %> <%= user.lastname %></a></li>
+    <li style="float:right">
+      <button onclick="window.location.href='/logout'">Logout</button>
+    </li>
+  </ul>
+
+  <h2 style="text-align:center; margin: 20px 0;">Your Courses</h2>
+
+  <div class="course-list">
+    <% user.courses.forEach(course => { %>
+      <div class="course-card">
+        <div class="course-image" style="background-image: url('<%= course.image %>');"></div>
+        <div class="course-details">
+          <div class="course-name"><%= course.name %></div>
+          <div class="course-professor"><%= course.professor %></div>
+          <div class="course-link">
+            <a href="/courses/<%= course.name.replace(/\s+/g, '-').toLowerCase() %>">Go to Course</a>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+.course-header {
+    text-align: center;
+    background-color: #333;
+    color: white;
+    padding: 20px;
+}
+
+.task-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-title {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.file-submission {
+    margin: 20px 0;
+}
+
+.file-submission input[type="file"] {
+    margin-top: 10px;
+    display: block;
+}
+
+.submit-btn {
+    display: inline-block;
+    margin: 20px 0;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+.grade-field, .plagiarism-field, .submission-date-field {
+    margin-top: 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.back-btn {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 15px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+}

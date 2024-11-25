@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/courses.css">
+    <link rel="stylesheet" href="/css/navigator.css">
+    <title><%= course.name %></title>
+</head>
+<body>
+    <ul>
+        <li class="nav-li"><a href="/main">Home</a></li>
+        <li><a>Welcome, <%= user.firstname %> <%= user.lastname %></a></li>
+        <li style="float:right">
+          <button onclick="window.location.href='/logout'">Logout</button>
+        </li>
+      </ul>    
+    <div class="course-header">
+        <h1><%= course.name %></h1>
+    </div>
+
+    <div class="course-tasks">
+        <% course.tasks.forEach(task => { %>
+            <div class="task-item">
+                <input 
+                    type="checkbox" 
+                    class="task-checkbox" 
+                    id="task-<%= task.id %>" 
+                    <%= task.completed ? 'checked' : '' %> 
+                />
+                <label for="task-<%= task.id %>" class="task-name"><%= task.name %></label>
+                <a href="/tasks/<%= task.id %>" class="task-status">
+                    View Details
+                </a>
+            </div>
+        <% }); %>
+    </div>
+</body>
+</html>
