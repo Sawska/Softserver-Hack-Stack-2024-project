@@ -5,6 +5,14 @@ const path = require('path');
 const fs = require('fs');
 const session = require('express-session');
 const app = express();
+const mysql = require('mysql2');
+
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: process.env.USER || 'root',
+    password: process.env.PASSWORD || '1234',
+    database: process.env.DATABASE || 'db'
+});
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -106,6 +114,10 @@ app.post('/login', (req, res) => {
         res.status(401).json({message:'Invalid credentials'}); 
     }
 });
+
+app.post('/register', (req, res) => {
+    //TODO
+})
 
 
 app.get('/logout', (req, res) => {
