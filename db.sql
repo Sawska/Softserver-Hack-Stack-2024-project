@@ -1,5 +1,7 @@
 CREATE TABLE User_table (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    user_email VARCHAR(320) UNIQUE,
+    user_password VARCHAR(100),
     firstname VARCHAR(100),
     lastname VARCHAR(100),
     student_status VARCHAR(50)
@@ -30,7 +32,6 @@ CREATE TABLE Course_Tasks (
     task_id INT
 );
 
--- Таблица сданных заданий (Submitted_Tasks)
 CREATE TABLE Submitted_Tasks (
     join_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,

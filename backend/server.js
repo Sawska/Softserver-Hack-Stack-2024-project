@@ -150,3 +150,13 @@ app.post('/submit-task', upload.single('file'), (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+// Возвращает dictionary с id, user_email, user_password, firstname, lastname, student_status если пользователь существует и правильный пароль, иначе undefined
+function getUserByLoginAndPassword(login, password) {
+    const [user] = db.execute('SELECT * FROM user_table WHERE user_email = ? AND user_password = ?', [login, password]);
+    return user.length === 0 ? undefined : user[0];
+}
+
+function addUserToUserTable(user_email, user_password, firstname, lastname, student_status) {
+    db.execute(`INSERT INTO User_table (${user_email}, ${user_password}, ${firstname}, ${lastname}, ${student_status})`);
+}
