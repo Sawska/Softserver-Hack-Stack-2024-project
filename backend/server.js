@@ -94,14 +94,15 @@ app.get('/courses/:courseName', (req, res) => {
 
 // Login POST route (authenticate user)
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // TODO: Add database verification for user login
-    if (username === 'user' && password === 'password') {
-        req.session.user = { username };  
+    if (email === 'user@m.ua' && password === 'password') {
+        console.log('Working')
+        req.session.user = { email };  
         res.redirect('/');
     } else {
-        res.status(401).send('Invalid credentials'); 
+        res.status(401).json({message:'Invalid credentials'}); 
     }
 });
 
