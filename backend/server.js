@@ -14,6 +14,9 @@ const db = mysql.createConnection({
     database: process.env.DATABASE || 'db'
 });
 
+// addUserToUserTable("abc@gmail.com", "1234", 'Dan', "Lol", "an");
+console.log(getUserByLogin('abc@gmail.com'));
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/'); 
@@ -151,12 +154,16 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-// Возвращает dictionary с id, user_email, user_password, firstname, lastname, student_status если пользователь существует и правильный пароль, иначе undefined
-function getUserByLoginAndPassword(login, password) {
-    const [user] = db.execute('SELECT * FROM user_table WHERE user_email = ? AND user_password = ?', [login, password]);
-    return user.length === 0 ? undefined : user[0];
+// Возвращает dictionary с id, user_email, user_password, firstname, lastname, student_status если пользователь существует, иначе undefined
+function getUserByLogin(login) {
+    let user;
+    db.execute('SELECT * FROM User_table WHERE user_email = ?', [login], (err, results, fields) => {
+        user = results.length > 0 ? user[0] : undefined;
+    });
+    return user;
 }
 
 function addUserToUserTable(user_email, user_password, firstname, lastname, student_status) {
-    db.execute(`INSERT INTO User_table (${user_email}, ${user_password}, ${firstname}, ${lastname}, ${student_status})`);
+    const query = `INSERT INTO User_table (user_email, user_password, firstname, lastname, student_status) VALUES (?, ?, ?, ?, ?)`;
+    db.execute(query, [user_email, user_password, firstname, lastname, student_status]);
 }
