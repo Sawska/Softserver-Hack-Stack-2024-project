@@ -21,10 +21,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 
 app.set('view engine', 'ejs');
-app.set('views', __dirname + '/frontend/public/views'); 
+app.set('views', path.resolve(__dirname, '..') + '/frontend/public/views'); 
 
 
-app.use(express.static(__dirname + '/frontend/public'));  
+app.use(express.static(path.resolve(__dirname, '..') + '/frontend/public'));  
 
 app.use(session({
     secret: 'your-secret-key',
