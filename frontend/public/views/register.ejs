@@ -66,19 +66,25 @@
 
         try {
             const response = await fetch("/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ first, last, email, password,status })
-            });
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ 
+            firstname: first, 
+            lastname: last, 
+            email, 
+            password, 
+            student_status: status 
+        })
+    });
 
             const result = await response.json();
 
             if (response.ok) {
                 messageDiv.innerHTML = `<div class="success">Registration successful! Redirecting...</div>`;
                 setTimeout(() => {
-                    window.location.href = "/login"; 
+                    window.location.href = "/"; 
                 }, 2000);
             } else {
                 messageDiv.innerHTML = `<div class="error">${result.message}</div>`;

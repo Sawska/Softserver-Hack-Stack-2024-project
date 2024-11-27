@@ -47,7 +47,7 @@
             if (response.ok) {
                 messageDiv.innerHTML = `<div class="success">Login successful! Redirecting...</div>`;
                 setTimeout(() => {
-                    window.location.href = "/dashboard"; 
+                    window.location.href = "/"; 
                 }, 2000);
             } else {
                 messageDiv.innerHTML = `<div class="error">${result.message}</div>`;

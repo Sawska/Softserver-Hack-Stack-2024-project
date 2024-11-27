@@ -9,7 +9,7 @@
 </head>
 <body>
   <ul>
-    <li class="nav-li"><a href="/main">Home</a></li>
+    <li class="nav-li"><a href="/">Home</a></li>
     <li><a>Welcome, <%= user.firstname %> <%= user.lastname %></a></li>
     <li style="float:right">
       <button onclick="window.location.href='/logout'">Logout</button>
@@ -21,12 +21,12 @@
   <div class="course-list">
     <% user.courses.forEach(course => { %>
       <div class="course-card">
-        <div class="course-image" style="background-image: url('<%= course.image %>');"></div>
+        <div class="course-image" style="background-image: url('<%= course.image_path %>');"></div>
         <div class="course-details">
-          <div class="course-name"><%= course.name %></div>
-          <div class="course-professor"><%= course.professor %></div>
+          <div class="course-name"><%= course.course_name %></div>
+          <div class="course-professor"><%= course.professor_name %></div>
           <div class="course-link">
-            <a href="/courses/<%= course.name.replace(/\s+/g, '-').toLowerCase() %>">Go to Course</a>
+            <a href="/courses/<%= course.id %>">Go to Course</a>
           </div>
         </div>
       </div>

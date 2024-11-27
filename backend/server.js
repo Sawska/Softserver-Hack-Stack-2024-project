@@ -5,28 +5,64 @@ const path = require('path');
 const fs = require('fs');
 const session = require('express-session');
 const app = express();
-const mysql = require('mysql2');
+const dbModule = require("./db");
+const pdfParse = require('pdf-parse');
+const { Configuration, OpenAIApi } = require('openai');
+require('dotenv').config();
 
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: process.env.USER || 'root',
-    password: process.env.PASSWORD || '1234',
-    database: process.env.DATABASE || 'db'
-});
-
-// addUserToUserTable("abc@gmail.com", "1234", 'Dan', "Lol", "an");
-console.log(getUserByLogin('abc@gmail.com'));
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); 
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, 'uploads')); 
     },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); 
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 const upload = multer({ storage });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.post('/upload', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded');
+    }
+    res.send(`File uploaded: <a href="/uploads/${req.file.filename}">View File</a>`);
+});
+
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+  
+  
+  const readTextFromFile = (filePath) => {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) return reject(err);
+        resolve(data);
+      });
+    });
+  };
+  
+  
+  const checkTextWithAI = async (text) => {
+    try {
+      const response = await openai.createChatCompletion({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'Determine if the following text is AI-generated.',
+          },
+          { role: 'user', content: text },
+        ],
+        max_tokens: 50,
+      });
+      return response.data.choices[0].message.content.trim();
+    } catch (error) {
+      throw new Error('Error connecting to OpenAI API: ' + error.message);
+    }
+  };
 
 
 app.use(express.json());
@@ -46,16 +82,16 @@ app.use(session({
 
 app.use(cors());
 
-const PORT = process.env.PORT || 3000;
-
+const PORT = process.env.PORT || 3001;
 
 app.get('/', (req, res) => {
     if (req.session.user) {
-        res.render('main');  
+        res.render('main', { user: req.session.user });  
     } else {
         res.redirect('/login');  
     }
 });
+
 
 
 app.get('/login', (req, res) => {
@@ -72,55 +108,170 @@ app.get('/register', (req, res) => {
 });
 
 
-app.get('/main', (req, res) => {
-    if (req.session.user) {
-        res.render('main');
-    } else {
-        res.redirect('/login');
-    }
-});
+
 
 
 app.get('/tasks/:taskId', (req, res) => {
     const taskId = req.params.taskId;
+
     if (req.session.user) {
-        // TODO: Replace with database logic to fetch task
-        const task = { id: taskId, title: `Task ${taskId}`, status: 'Not Completed' };
-        res.render('task', { task });
+        dbModule.getTaskById(taskId, (err, task) => {
+            if (err) {
+                console.error("Error fetching task:", err);
+                res.status(500).json({ message: "Internal server error" });
+                return;
+            }
+
+            if (!task) {
+                res.status(404).json({ message: "Task not found" });
+                return;
+            }
+            dbModule.getCourseByTaskId(taskId, (err, course) => {
+                if (err) {
+                    console.error("Error fetching course:", err);
+                    res.status(500).json({ message: "Internal server error" });
+                    return;
+                }
+
+                if (!course) {
+                    res.status(404).json({ message: "Course not found" });
+                    return;
+                
+                }
+                console.log("pushing task");
+                console.log(task);
+                res.render('task', { task, course, user: req.session.user });
+            });
+        });
     } else {
         res.redirect('/login');
     }
 });
 
-app.get('/courses/:courseName', (req, res) => {
-    const courseName = req.params.courseName;
+
+
+app.get('/courses/:courseId', (req, res) => {
+    const courseId = req.params.courseId;
+
     if (req.session.user) {
-        // TODO: Replace with database logic to fetch course data
-        const course = { name: courseName, description: `Details about ${courseName}` };
-        res.render('courses', { course });
+        dbModule.getCourseById(courseId, (err, course) => {
+            if (err) {
+                console.error("Error fetching course:", err);
+                res.status(500).json({ message: "Internal server error" });
+                return;
+            }
+
+            if (!course) {
+                res.status(404).json({ message: "Course not found" });
+                return;
+            }
+
+            dbModule.getTasksByCourseId(courseId, (err, tasks) => {
+                if (err) {
+                    console.error("Error fetching tasks:", err);
+                    res.status(500).json({ message: "Internal server error" });
+                    return;
+                }
+
+                course.tasks = tasks;
+                res.render('courses', { course, user: req.session.user });
+            });
+        });
     } else {
         res.redirect('/login');
     }
 });
 
-// Login POST route (authenticate user)
-//gfdgfdgfd
+
+
+
+
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
 
-    // TODO: Add database verification for user login
-    if (email === 'user@m.ua' && password === 'password') {
-        console.log('Working')
-        req.session.user = { email };  
-        res.redirect('/');
-    } else {
-        res.status(401).json({message:'Invalid credentials'}); 
-    }
+    dbModule.validateLogin(email, password, (err, user) => {
+        if (err) {
+            console.error("Error during login:", err);
+            res.status(500).json({ message: "Internal server error" });
+            return;
+        }
+
+        if (user) {
+            dbModule.getCoursesForUser(user.id, (err, courses) => {
+                if (err) {
+                    console.error("Error fetching courses:", err);
+                    res.status(500).json({ message: "Internal server error" });
+                    return;
+                }
+
+                console.log(courses)
+
+                req.session.user = {
+                    id: user.id,
+                    email: user.email,
+                    firstname: user.firstname,
+                    lastname: user.lastname,
+                    courses: courses,
+                    status: user.student_status, 
+                };
+
+                res.json({ message: "Login successful", user: req.session.user });
+            });
+        } else {
+            res.status(401).json({ message: "Invalid credentials" });
+        }
+    });
 });
 
+
+
+
 app.post('/register', (req, res) => {
-    //TODO
-})
+    const { email, password, firstname, lastname, student_status } = req.body;
+
+    dbModule.userExists(email, (err, exists) => {
+        if (err) {
+            console.error("Error checking user existence:", err);
+            res.status(500).json({ message: "Internal server error" });
+            return;
+        }
+
+        if (exists) {
+            res.status(400).json({ message: "User already exists" });
+        } else {
+            dbModule.addUser(email, password, firstname, lastname, student_status, (err, userId) => {
+                if (err) {
+                    console.error("Error adding user:", err);
+                    res.status(500).json({ message: "Internal server error" });
+                    return;
+                }
+
+                dbModule.getCoursesForUser(userId, (err, courses) => {
+                    if (err) {
+                        console.error("Error fetching courses:", err);
+                        res.status(500).json({ message: "Internal server error" });
+                        return;
+                    }
+
+                    req.session.user = {
+                        id: userId,
+                        email,
+                        firstname,
+                        lastname,
+                        courses,
+                        status: student_status, 
+                    };
+                    console.log(userId);
+
+                    res.json({ message: "Registration successful", user: req.session.user });
+                });
+            });
+        }
+    });
+});
+
+
+
 
 
 app.get('/logout', (req, res) => {
@@ -134,36 +285,85 @@ app.post('/submit-task', upload.single('file'), (req, res) => {
         return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const { userId, courseId, taskId } = req.body;
+    const { userId, taskId } = req.body;
     const filePath = `/uploads/${req.file.filename}`;
-    const grade = "A";
-    const plagiarismPercentage = 10;
+    const plagiarismPercentage = -1;
     const submissionDate = new Date().toLocaleString();
 
+    dbModule.addSubmittedTask(userId, taskId, filePath, (err, taskId) => {
+        if (err) {
+            return res.status(500).json({ message: `Error saving task submission: ${err}` });
+        }
 
-    res.json({
-        grade,
-        plagiarismPercentage,
-        submissionDate,
-        filePath,
+        dbModule.updateTaskSubmissionStatus(taskId, 1, submissionDate, (err) => {
+            if (err) {
+                return res.status(500).json({ message: `Error updating task submission status: ${err}` });
+            }
+
+            res.json({
+                plagiarismPercentage,
+                submissionDate,
+                filePath,
+            });
+        });
     });
 });
+
+
+
+
+app.get('/get-students-in-course/:courseId', (req, res) => {
+    const courseId = req.params.courseId;
+
+   dbModule.getStudentsInCourse(courseId, (err, students) => {
+        if (err) {
+            return res.status(500).json({ message: `Error fetching students: ${err.message}` });
+        }
+
+        res.json({ students: students });
+    });
+});
+
+app.post('/update-grade', (req, res) => {
+    const { userId, courseId, taskId, grade } = req.body;
+
+    dbModule.updateGrade(userId, courseId, taskId, grade, (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+
+        res.json(result);
+    });
+});
+
+
 
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-});
+    dbModule.initTables();
 
-// Возвращает dictionary с id, user_email, user_password, firstname, lastname, student_status если пользователь существует, иначе undefined
-function getUserByLogin(login) {
-    let user;
-    db.execute('SELECT * FROM User_table WHERE user_email = ?', [login], (err, results, fields) => {
-        user = results.length > 0 ? user[0] : undefined;
+    dbModule.addCourse("Math 101", "Example", "/uploads/a.jpg", (err, courseId) => {
+        if (err) {
+            console.error("Failed to add course:", err);
+        } else {
+            console.log(`Course added with ID: ${courseId}`);
+        }
     });
-    return user;
-}
+    
+    dbModule.addCourseToUser(1, 1, (err, joinId) => {
+        if (err) {
+            console.error("Failed to add course to user:", err);
+        } else {
+            console.log(`User-course mapping added with ID: ${joinId}`);
+        }
+    });
 
-function addUserToUserTable(user_email, user_password, firstname, lastname, student_status) {
-    const query = `INSERT INTO User_table (user_email, user_password, firstname, lastname, student_status) VALUES (?, ?, ?, ?, ?)`;
-    db.execute(query, [user_email, user_password, firstname, lastname, student_status]);
-}
+    dbModule.addTask(1,"Task1",-1,-1,(err,taskId) => {
+        if (err) {
+            console.error("Failed to add course:", err);
+        } else {
+            console.log(`Course added with ID: ${taskId}`);
+        }
+    })
+});
