@@ -3,3 +3,6 @@ backend/package-lock.json
 node_modules
 .vscode
 backend/.env
+backend/database.sqlite
+backend/uploads
+backend/.DS_Store

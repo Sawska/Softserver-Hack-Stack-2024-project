@@ -91,15 +91,15 @@
 
     <script>
 
-document.getElementById('assign-grade-btn').addEventListener('click', function () {
-    const grade = document.getElementById('grade-input').value;
-    const userId = this.getAttribute('data-user-id');
-    const courseId = this.getAttribute('data-course-id');
-    const taskId = this.getAttribute('data-task-id');
+// document.getElementById('assign-grade-btn').addEventListener('click', function () {
+//     const grade = document.getElementById('grade-input').value;
+//     const userId = this.getAttribute('data-user-id');
+//     const courseId = this.getAttribute('data-course-id');
+//     const taskId = this.getAttribute('data-task-id');
     
     
-    updateGrade(userId, courseId, taskId, grade);
-});
+//     updateGrade(userId, courseId, taskId, grade);
+// });
 
 function updateGrade(userId, courseId, taskId, grade) {
     fetch('/update-grade', {
